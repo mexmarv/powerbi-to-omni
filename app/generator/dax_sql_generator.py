@@ -19,6 +19,18 @@ def extract_expression(tokens, start):
             break
     return expr[1:-1], i  # remove outer ( and )
 
+def split_on_comma(tokens):
+    """Split a list of tokens on the first top-level comma"""
+    depth = 0
+    for i, tok in enumerate(tokens):
+        if tok == "(":
+            depth += 1
+        elif tok == ")":
+            depth -= 1
+        elif tok == "," and depth == 0:
+            return tokens[:i], tokens[i+1:]
+    return tokens, []
+
 def translate_dax_ast(expression, measures_dict=None):
     expression = resolve_measure_refs(expression, measures_dict or {})
     tokens = tokenize_dax(expression)
@@ -36,12 +48,12 @@ def translate_dax_ast(expression, measures_dict=None):
                 continue
 
         elif tok == "DIVIDE":
-            left_expr, j = extract_expression(tokens, i + 1)
-            right_expr, k = extract_expression(tokens, j)
-            left_sql = translate_dax_ast(" ".join(left_expr), measures_dict)
-            right_sql = translate_dax_ast(" ".join(right_expr), measures_dict)
+            full_expr, j = extract_expression(tokens, i + 1)
+            left_tokens, right_tokens = split_on_comma(full_expr)
+            left_sql = translate_dax_ast(" ".join(left_tokens), measures_dict)
+            right_sql = translate_dax_ast(" ".join(right_tokens), measures_dict)
             sql.append(f"COALESCE(({left_sql}) / NULLIF(({right_sql}), 0), 0)")
-            i = k
+            i = j
             continue
 
         elif tok == "IF":

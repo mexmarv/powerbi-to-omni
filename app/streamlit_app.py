@@ -4,7 +4,7 @@ import json
 import yaml
 import io
 from pathlib import Path
-from app.generator.dax_to_sql_advanced import translate_dax_to_sql
+from generator.dax_to_sql_advanced import translate_dax_to_sql
 
 st.set_page_config(layout="wide")
 st.title("Power BI → Omni Semantic Layer Generator")

@@ -68,7 +68,7 @@ powerbi-to-omni/
 
 ---
 
-## 🧪 Try the Enterprise Sample
+## Try the Enterprise Sample
 
 Test your full setup using the included:
 
@@ -83,7 +83,7 @@ These include:
 
 ---
 
-## ✨ Built with ❤️ by Marvin Nahmias
+## Built with ❤️ by Marvin Nahmias
 
 - GitHub: [@mexmarv](https://github.com/mexmarv)
 - LinkedIn: [Marvin Nahmias](https://www.linkedin.com/in/marvinnahmias)

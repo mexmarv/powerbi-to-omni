@@ -31,6 +31,14 @@ def split_on_comma(tokens):
             return tokens[:i], tokens[i+1:]
     return tokens, []
 
+def format_dax_column(dax_ref):
+    """Convert Sales[order_date] → Sales.order_date"""
+    if "[" in dax_ref and "]" in dax_ref:
+        table, column = dax_ref.split("[", 1)
+        column = column.rstrip("]")
+        return f"{table}.{column}"
+    return dax_ref
+
 def translate_dax_ast(expression, measures_dict=None):
     expression = resolve_measure_refs(expression, measures_dict or {})
     tokens = tokenize_dax(expression)
@@ -73,12 +81,13 @@ def translate_dax_ast(expression, measures_dict=None):
 
             if len(filter_tokens) >= 4 and filter_tokens[0].upper() == "SAMEPERIODLASTYEAR":
                 if filter_tokens[1] == "(" and filter_tokens[-1] == ")":
-                    date_col = filter_tokens[2].strip("[]")
+                    dax_col = filter_tokens[2]
+                    sql_col = format_dax_column(dax_col)
                     sql_expr = f"""
 {agg_sql}
 -- Filter applied using DATEADD for SAMEPERIODLASTYEAR
-WHERE {date_col} IN (
-    SELECT DATEADD({date_col}, -1, 'year')
+WHERE {sql_col} IN (
+    SELECT DATEADD({sql_col}, -1, 'year')
 )
 """
                     sql.append(sql_expr.strip())
@@ -100,7 +109,7 @@ WHERE {date_col} IN (
             i += 1
             continue
 
-        elif re.match(r"\[.*?\]|[\w\.]+", tokens[i]):
+        elif re.match(r"\[.*?\]|[\w\\.]+", tokens[i]):
             sql.append(tokens[i])
             i += 1
             continue

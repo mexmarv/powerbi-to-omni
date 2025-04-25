@@ -28,8 +28,9 @@ def split_on_comma(tokens):
         elif tok == ")":
             depth -= 1
         if tok == "," and depth == 0:
-            args.append(current)
-            current = []
+            if current:  # avoid ghost commas
+                args.append(current)
+                current = []
         else:
             current.append(tok)
     if current:
@@ -73,7 +74,7 @@ def translate_dax_ast(expression, measures_dict=None):
         elif tok == "IF":
             full_expr, j = extract_expression(tokens, i + 1)
             args = split_on_comma(full_expr)
-            if len(args) == 3:
+            if len(args) == 3 and all(args):
                 cond_sql = translate_dax_ast(" ".join(args[0]), measures_dict)
                 then_sql = translate_dax_ast(" ".join(args[1]), measures_dict)
                 else_sql = translate_dax_ast(" ".join(args[2]), measures_dict)
@@ -114,7 +115,7 @@ WHERE {sql_col} IN (
             i += 1
             continue
 
-        elif re.match(r"\d+(\.\d+)?", tokens[i]):  # numeric literal
+        elif re.match(r"\d+(\.\d+)?", tokens[i]):  # numeric literals
             sql.append(tokens[i])
             i += 1
             continue

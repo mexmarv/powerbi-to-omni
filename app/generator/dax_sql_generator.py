@@ -76,6 +76,13 @@ WHERE {filter_col} IN (
                 break
             continue
 
+        elif tok == "(":
+            inner_expr, j = extract_expression(tokens, i)
+            inner_sql = translate_dax_ast(" ".join(inner_expr), measures_dict)
+            sql.append(f"({inner_sql})")
+            i = j
+            continue
+
         elif tok in ["+", "-", "*", "/"]:
             sql.append(tok)
             i += 1

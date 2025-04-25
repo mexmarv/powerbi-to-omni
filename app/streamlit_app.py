@@ -4,14 +4,14 @@ import json
 import yaml
 import io
 from pathlib import Path
-from generator.dax_parser import tokenize_dax
 from generator.dax_sql_generator import translate_dax_ast
 
 st.set_page_config(layout="wide")
 st.title("Power BI → Omni Semantic Layer Generator")
-st.markdown("Drop a `.pbix` file to extract tables and DAX logic, convert to Omni YAML, and download the full model bundle.")
 
 st.markdown("""
+Drop a `.pbix` file to extract tables and DAX logic, convert to Omni YAML, and download the full model bundle.
+
 **After downloading:**
 - Upload the `.yml` files from the `/models/` folder to **Omni → Models → Import**
 - The `.sql` files in the `/sql/` folder are optional previews of the DAX logic converted to SQL — useful for validation or testing in Databricks.
@@ -47,6 +47,8 @@ if uploaded_file:
                 st.markdown("**Columns:**")
                 st.write(table["columns"])
                 st.markdown("**Measures:**")
+
+                # Initialize YAML structure
                 model_yaml = {
                     'semantic_model': {
                         'name': table['name'],
@@ -57,10 +59,14 @@ if uploaded_file:
                         'measures': []
                     }
                 }
+
+                # Resolve measure dependencies
+                measure_dict = {msr['name']: msr['expression'] for msr in table["measures"]}
+
                 for m in table["measures"]:
                     st.code(f"{m['name']} = {m['expression']}", language='dax')
-                    tokens = tokenize_dax(m['expression'])
-                    sql_expr = translate_dax_ast(tokens)
+
+                    sql_expr = translate_dax_ast(m['expression'], measure_dict)
                     st.text_area(f"SQL for {m['name']}", sql_expr, height=80)
 
                     model_yaml['semantic_model']['measures'].append({
@@ -73,9 +79,11 @@ if uploaded_file:
                         f"-- SQL for {m['name']}\nSELECT {sql_expr} FROM {table['name']};"
                     )
 
+                # Save YAML string
                 yml_str = yaml.dump(model_yaml, sort_keys=False)
                 yaml_files[f"{table['name']}.yml"] = yml_str
 
+        # Final download bundle
         if yaml_files:
             zip_buffer = io.BytesIO()
             with zipfile.ZipFile(zip_buffer, "w") as zip_file:

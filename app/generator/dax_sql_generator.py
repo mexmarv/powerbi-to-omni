@@ -1,8 +1,10 @@
-def translate_dax_ast(tokens):
-    """
-    Naive DAX-to-SQL translator for basic DAX functions.
-    Extend this to support full DAX coverage.
-    """
+import re
+from generator.dax_parser import tokenize_dax
+from generator.resolve import resolve_measure_refs
+
+def translate_dax_ast(expression, measures_dict=None):
+    expression = resolve_measure_refs(expression, measures_dict or {})
+    tokens = tokenize_dax(expression)
     sql = []
     i = 0
     while i < len(tokens):

@@ -2,56 +2,63 @@ import re
 
 def tokenize_dax(expression):
     """
-    Tokenizes a DAX expression while combining table[column] references like Sales[amount].
-    Handles nested functions and arithmetic expressions.
+    Tokenizes a DAX expression, preserving brackets and combining identifiers like Sales[amount].
+    Output: ['SUM', '(', 'Sales[amount]', ')']
     """
     tokens = []
     i = 0
     while i < len(expression):
-        c = expression[i]
+        char = expression[i]
 
-        # Handle whitespace
-        if c.isspace():
+        # Skip whitespace
+        if char.isspace():
             i += 1
             continue
 
-        # Handle operators and parentheses
-        if c in "=<>+-*/(),":
-            tokens.append(c)
+        # Operators and punctuation
+        if char in "=<>+-*/(),":
+            tokens.append(char)
             i += 1
             continue
 
-        # Handle bracketed [column] or table[column]
-        if c == '[':
-            j = i
-            while j < len(expression) and expression[j] != ']':
-                j += 1
-            if j < len(expression):  # found closing ]
-                tokens.append(expression[i:j+1])
-                i = j + 1
+        # Handle identifiers or functions
+        if char.isalpha() or char == '_':
+            start = i
+            while i < len(expression) and (expression[i].isalnum() or expression[i] in '._'):
+                i += 1
+            name = expression[start:i]
+
+            # If next is [, it's a table[column] combo
+            if i < len(expression) and expression[i] == '[':
+                bracket_start = i
+                i += 1
+                while i < len(expression) and expression[i] != ']':
+                    i += 1
+                if i < len(expression):
+                    i += 1  # include closing ]
+                    full = name + expression[bracket_start:i]
+                    tokens.append(full)
+                    continue
+                else:
+                    raise ValueError(f"Unclosed [ in expression after {name}")
+            else:
+                tokens.append(name)
+                continue
+
+        # Handle standalone [column]
+        if char == '[':
+            start = i
+            i += 1
+            while i < len(expression) and expression[i] != ']':
+                i += 1
+            if i < len(expression):
+                i += 1
+                tokens.append(expression[start:i])
                 continue
             else:
-                raise ValueError("Unmatched '[' in expression")
+                raise ValueError("Unclosed [ in expression")
 
-        # Handle words or identifiers, possibly followed by [column]
-        if c.isalnum() or c == '_':
-            j = i
-            while j < len(expression) and (expression[j].isalnum() or expression[j] in '._'):
-                j += 1
-            identifier = expression[i:j]
-            if j < len(expression) and expression[j] == '[':
-                k = j
-                while k < len(expression) and expression[k] != ']':
-                    k += 1
-                if k < len(expression):
-                    tokens.append(identifier + expression[j:k+1])
-                    i = k + 1
-                    continue
-            tokens.append(identifier)
-            i = j
-            continue
-
-        # Fallback
+        # If nothing matched, skip (or raise)
         i += 1
 
     return tokens

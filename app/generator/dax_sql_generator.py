@@ -71,6 +71,29 @@ def translate_dax_ast(expression, measures_dict=None, vars_dict=None):
             i += 1
             continue
 
+        if tok == "DIVIDE":
+            full_expr, j = extract_expression(tokens, i + 1)
+            args = split_on_comma(full_expr)
+            if len(args) == 2:
+                left_sql = translate_dax_ast(" ".join(args[0]), measures_dict, vars_dict)
+                right_sql = translate_dax_ast(" ".join(args[1]), measures_dict, vars_dict)
+                sql.append(f"COALESCE(({left_sql}) / NULLIF(({right_sql}), 0), 0)")
+            else:
+                sql.append("-- REVIEW: Invalid DIVIDE syntax")
+            i = j
+            continue
+
+        if tok == "RANKX":
+            full_expr, j = extract_expression(tokens, i + 1)
+            args = split_on_comma(full_expr)
+            if len(args) >= 2:
+                rank_expr = translate_dax_ast(" ".join(args[1]), measures_dict, vars_dict)
+                sql.append(f"RANK() OVER (ORDER BY {rank_expr} DESC)")
+            else:
+                sql.append("-- REVIEW: Invalid RANKX syntax")
+            i = j
+            continue
+
         if tok == "SWITCH":
             full_expr, j = extract_expression(tokens, i + 1)
             args = split_on_comma(full_expr)
@@ -115,13 +138,7 @@ def translate_dax_ast(expression, measures_dict=None, vars_dict=None):
             i = j
             continue
 
-        if tok == "RANKX":
-            inner, j = extract_expression(tokens, i + 1)
-            sql.append("-- RANKX not yet supported (requires row context)")
-            i = j
-            continue
-
-        elif tok == "IF":
+        if tok == "IF":
             full_expr, j = extract_expression(tokens, i + 1)
             args = split_on_comma(full_expr)
             if len(args) == 3 and all(args):

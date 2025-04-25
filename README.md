@@ -4,6 +4,8 @@
 - 💼 [LinkedIn](https://www.linkedin.com/in/marvinnahmias)  
 - 🌐 [about.me/marvinnahmias](https://about.me/marvinnahmias)
 
+You can test it here: [PBI 2 OMNI Semantic Layer Conversion](https://pbi2omni.streamlit.app/)
+
 This is a Streamlit web app that:
 - Uploads `.pbix` or `.pbit` Power BI files
 - Extracts embedded models

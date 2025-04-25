@@ -4,7 +4,8 @@ import json
 import yaml
 import io
 from pathlib import Path
-from generator.dax_to_sql_advanced import translate_dax_to_sql
+from generator.dax_parser import tokenize_dax
+from generator.dax_sql_generator import translate_dax_ast
 
 st.set_page_config(layout="wide")
 st.title("Power BI → Omni Semantic Layer Generator")
@@ -58,7 +59,8 @@ if uploaded_file:
                 }
                 for m in table["measures"]:
                     st.code(f"{m['name']} = {m['expression']}", language='dax')
-                    sql_expr = translate_dax_to_sql(m['expression'])
+                    tokens = tokenize_dax(m['expression'])
+                    sql_expr = translate_dax_ast(tokens)
                     st.text_area(f"SQL for {m['name']}", sql_expr, height=80)
 
                     model_yaml['semantic_model']['measures'].append({

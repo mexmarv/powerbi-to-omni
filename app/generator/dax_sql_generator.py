@@ -16,7 +16,7 @@ def extract_expression(tokens, start):
         i += 1
         if depth == 0:
             break
-    return expr[1:-1], i  # remove outer ( and )
+    return expr[1:-1], i
 
 def split_on_comma(tokens):
     depth = 0
@@ -79,7 +79,7 @@ def translate_dax_ast(expression, measures_dict=None):
                 else_sql = translate_dax_ast(" ".join(args[2]), measures_dict)
                 sql.append(f"CASE WHEN {cond_sql} THEN {then_sql} ELSE {else_sql} END")
             else:
-                sql.append("-- REVIEW: Invalid IF syntax")
+                sql.append(f"-- REVIEW: Invalid IF syntax: {full_expr}")
             i = j
             continue
 
@@ -88,7 +88,6 @@ def translate_dax_ast(expression, measures_dict=None):
             agg_tokens, filter_tokens = split_on_comma(full_expr)
             agg_sql = translate_dax_ast(" ".join(agg_tokens), measures_dict)
 
-            # SAMEPERIODLASTYEAR
             if len(filter_tokens) >= 4 and filter_tokens[0].upper() == "SAMEPERIODLASTYEAR":
                 dax_col = filter_tokens[2]
                 sql_col = format_dax_column(dax_col)
@@ -103,32 +102,6 @@ WHERE {sql_col} IN (
                 i = j
                 continue
 
-            # FILTER(table, condition)
-            if len(filter_tokens) >= 3 and filter_tokens[0].upper() == "FILTER":
-                _, k = extract_expression(filter_tokens, 1)
-                filter_args = split_on_comma(filter_tokens[2:k])
-                if len(filter_args) == 2:
-                    table_sql = translate_dax_ast(" ".join(filter_args[0]), measures_dict)
-                    cond_sql = translate_dax_ast(" ".join(filter_args[1]), measures_dict)
-                    sql_expr = f"""
-{agg_sql}
--- Filter applied using FILTER
-FROM {table_sql}
-WHERE {cond_sql}
-"""
-                    sql.append(sql_expr.strip())
-                    i = j
-                    continue
-
-            # ALL(...)
-            if filter_tokens[0].upper() == "ALL":
-                sql.append(agg_sql)  # ignore ALL, no WHERE applied
-                i = j
-                continue
-
-            sql.append(f"-- REVIEW: Unsupported filter in CALCULATE: {' '.join(filter_tokens)}")
-            break
-
         elif tok == "(":
             inner_expr, j = extract_expression(tokens, i)
             inner_sql = translate_dax_ast(" ".join(inner_expr), measures_dict)
@@ -136,8 +109,13 @@ WHERE {cond_sql}
             i = j
             continue
 
-        elif tok in ["+", "-", "*", "/"]:
+        elif tok in ["+", "-", "*", "/", "=", "<", ">", "<=", ">=", "<>"]:
             sql.append(tok)
+            i += 1
+            continue
+
+        elif re.match(r"\d+(\.\d+)?", tokens[i]):  # numeric literal
+            sql.append(tokens[i])
             i += 1
             continue
 

@@ -9,7 +9,12 @@ from generator.dax_to_sql_advanced import translate_dax_to_sql
 st.set_page_config(layout="wide")
 st.title("Power BI → Omni Semantic Layer Generator")
 st.markdown("Drop a `.pbix` file to extract tables and DAX logic, convert to Omni YAML, and download the full model bundle.")
-st.markdown("**Once downloaded, upload the `/models/*.yml` files into Omni under `Models → Import`.**")
+
+st.markdown("""
+**After downloading:**
+- Upload the `.yml` files from the `/models/` folder to **Omni → Models → Import**
+- The `.sql` files in the `/sql/` folder are optional previews of the DAX logic converted to SQL — useful for validation or testing in Databricks.
+""")
 
 uploaded_file = st.file_uploader("Drop your .pbix or .pbit file here", type=["pbix", "pbit"])
 

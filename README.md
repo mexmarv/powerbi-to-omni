@@ -1,4 +1,8 @@
 # Power BI to Omni Semantic Layer Generator (Streamlit)
+### Made with ❤️ by [Marvin Nahmias](https://github.com/mexmarv)
+- 📧 [mexmarv@gmail.com](mailto:mexmarv@gmail.com)  
+- 💼 [LinkedIn](https://www.linkedin.com/in/marvinnahmias)  
+- 🌐 [about.me/marvinnahmias](https://about.me/marvinnahmias)
 
 This is a Streamlit web app that:
 - Uploads `.pbix` or `.pbit` Power BI files
@@ -16,4 +20,10 @@ pip install -r requirements.txt
 streamlit run streamlit_app.py
 ```
 
-Then upload your `.pbix` and download the model bundle. Upload `/models/*.yml` to Omni under **Models → Import**.
+Then upload your `.pbix` and download the model bundle.
+
+### Omni Upload
+- Upload the `.yml` files from `/models/` to **Omni → Models → Import**
+
+### SQL Files
+- The `.sql` files in `/sql/` are optional and show the converted DAX logic in SQL format — useful for testing in Databricks or manual validation.

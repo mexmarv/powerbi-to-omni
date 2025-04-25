@@ -67,26 +67,26 @@ def translate_dax_ast(expression, measures_dict=None):
             continue
 
         elif tok == "CALCULATE":
-            agg_expr, j = extract_expression(tokens, i + 1)
-            agg_sql = translate_dax_ast(" ".join(agg_expr), measures_dict)
+            full_expr, j = extract_expression(tokens, i + 1)
+            agg_tokens, filter_tokens = split_on_comma(full_expr)
+            agg_sql = translate_dax_ast(" ".join(agg_tokens), measures_dict)
 
-            filter_func = tokens[j].upper() if j < len(tokens) else ""
-            filter_col = tokens[j + 2].strip("[]") if j + 2 < len(tokens) else "UNKNOWN"
-
-            if filter_func == "SAMEPERIODLASTYEAR":
-                sql_expr = f"""
+            if len(filter_tokens) >= 4 and filter_tokens[0].upper() == "SAMEPERIODLASTYEAR":
+                if filter_tokens[1] == "(" and filter_tokens[-1] == ")":
+                    date_col = filter_tokens[2].strip("[]")
+                    sql_expr = f"""
 {agg_sql}
 -- Filter applied using DATEADD for SAMEPERIODLASTYEAR
-WHERE {filter_col} IN (
-    SELECT DATEADD({filter_col}, -1, 'year')
+WHERE {date_col} IN (
+    SELECT DATEADD({date_col}, -1, 'year')
 )
 """
-                sql.append(sql_expr.strip())
-                i = j + 4
+                    sql.append(sql_expr.strip())
+                    i = j
+                    continue
             else:
-                sql.append(f"-- REVIEW: Unsupported filter in CALCULATE: {filter_func}")
+                sql.append(f"-- REVIEW: Unsupported filter in CALCULATE: {' '.join(filter_tokens)}")
                 break
-            continue
 
         elif tok == "(":
             inner_expr, j = extract_expression(tokens, i)

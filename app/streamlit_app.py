@@ -1,4 +1,3 @@
-
 import streamlit as st
 import zipfile
 import json
@@ -63,8 +62,9 @@ if uploaded_file:
                         'expr': sql_expr
                     })
 
-                    sql_files[f"{table['name']}_{m['name']}.sql"] = f"-- SQL for {m['name']}
-SELECT {sql_expr} FROM {table['name']};"
+                    sql_files[f"{table['name']}_{m['name']}.sql"] = (
+                        f"-- SQL for {m['name']}\nSELECT {sql_expr} FROM {table['name']};"
+                    )
 
                 yml_str = yaml.dump(model_yaml, sort_keys=False)
                 yaml_files[f"{table['name']}.yml"] = yml_str

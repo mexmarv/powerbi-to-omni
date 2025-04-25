@@ -2,7 +2,12 @@ import re
 
 def tokenize_dax(expression):
     """
-    Tokenizes a DAX expression into basic tokens (words, operators, brackets).
+    Tokenizes a DAX expression while keeping [bracketed] identifiers and respecting punctuation.
     """
-    tokens = re.findall(r'[\w\[\]\.]+|[(),=<>+\-*/]', expression)
-    return [t.strip() for t in tokens if t.strip()]
+    pattern = r"(\[.*?\]|[A-Za-z_][\w\.]*)|([=<>+\-*/(),])"
+    tokens = []
+    for match in re.finditer(pattern, expression):
+        token = match.group().strip()
+        if token:
+            tokens.append(token)
+    return tokens

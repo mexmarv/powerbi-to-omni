@@ -3,7 +3,7 @@ from generator.dax_parser import tokenize_dax
 from generator.resolve import resolve_measure_refs
 
 def extract_expression(tokens, start):
-    """Extract a full expression, respecting nested parentheses"""
+    """Extract a full expression, respecting nested parentheses."""
     depth = 0
     expr = []
     for i in range(start, len(tokens)):
@@ -32,18 +32,21 @@ def translate_dax_ast(expression, measures_dict=None):
             i += 4
 
         elif tok == "DIVIDE":
-            left = tokens[i+2].strip("[]")
-            right = tokens[i+4].strip("[]")
-            sql.append(f"COALESCE({left} / NULLIF({right}, 0), 0)")
-            i += 6
+            left_expr, j = extract_expression(tokens, i+2)
+            right_expr, k = extract_expression(tokens, j+2)
+            left_sql = translate_dax_ast(" ".join(left_expr), measures_dict)
+            right_sql = translate_dax_ast(" ".join(right_expr), measures_dict)
+            sql.append(f"COALESCE(({left_sql}) / NULLIF(({right_sql}), 0), 0)")
+            i = k + 1
 
         elif tok == "IF":
-            condition = tokens[i+2:i+6]
-            condition_str = " ".join(condition).replace("[", "").replace("]", "")
-            then = tokens[i+6]
-            _else = tokens[i+8]
-            sql.append(f"CASE WHEN {condition_str} THEN {then} ELSE {_else} END")
-            i += 10
+            cond_expr, j = extract_expression(tokens, i+2)
+            then_expr, k = extract_expression(tokens, j+1)
+            else_expr, l = extract_expression(tokens, k+1)
+            sql.append(
+                f"CASE WHEN {' '.join(cond_expr)} THEN {' '.join(then_expr)} ELSE {' '.join(else_expr)} END"
+            )
+            i = l + 1
 
         elif tok == "CALCULATE":
             try:
@@ -74,7 +77,7 @@ WHERE {filter_col} IN (
             sql.append(tok)
             i += 1
 
-        elif re.match(r"[\[\]A-Za-z0-9_\\.]+", tok):
+        elif re.match(r"\[.*?\]|[\w\.]+", tok):
             sql.append(tok)
             i += 1
 

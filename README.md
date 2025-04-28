@@ -36,7 +36,7 @@ You can test it here: [PBI 2 OMNI Semantic Layer Conversion](https://pbi2omni.st
 
 - `TOPN(...)`, `VALUES(...)`, `DISTINCT(...)`
 - `REMOVEFILTERS(...)`, `EARLIER(...)`
-- Iterative / row context logic (e.g. `RANKX` with `ALLSELECTED`)
+- Iterative / row context logic (e.g., `RANKX` with `ALLSELECTED`)
 
 ---
 
@@ -47,7 +47,24 @@ You can test it here: [PBI 2 OMNI Semantic Layer Conversion](https://pbi2omni.st
 3. Translates each DAX measure into:
    - SQL expression
    - Omni-compatible YAML
-4. Download, review or upload directly into Omni.
+4. Download, review, or upload directly into Omni.
+
+---
+
+## 🛠️ How to Export Your Power BI Semantic Model
+
+Power BI Desktop does not directly expose the semantic model (`model.json`).  
+To extract it easily, use [Tabular Editor 2](https://github.com/TabularEditor/TabularEditor), which is **free and open-source**.
+
+### Steps:
+1. Download [Tabular Editor 2 Portable ZIP](https://github.com/TabularEditor/TabularEditor/releases) (no install required)
+2. Extract and run `TabularEditor.exe`
+3. Open your `.pbix` file in Power BI Desktop
+4. In Tabular Editor, connect to the running local model (usually `localhost:xxxxx`)
+5. Export your semantic model:
+   - File → Save Model → Save as `model.bim` or `model.json`
+
+✅ Now you have your Power BI model ready for translation!
 
 ---
 
@@ -68,7 +85,7 @@ powerbi-to-omni/
 
 ---
 
-## Try the Enterprise Sample
+## 🧪 Try the Enterprise Sample
 
 Test your full setup using the included:
 
@@ -83,7 +100,7 @@ These include:
 
 ---
 
-## Built with ❤️ by Marvin Nahmias
+## ✨ Built with ❤️ by Marvin Nahmias
 
 - GitHub: [@mexmarv](https://github.com/mexmarv)
 - LinkedIn: [Marvin Nahmias](https://www.linkedin.com/in/marvinnahmias)
